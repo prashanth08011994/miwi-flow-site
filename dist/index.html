@@ -79,18 +79,6 @@
     .eyebrow { margin: 0 0 15px; color: var(--mint-strong); font-size: 13px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
     h1 { margin: 0; max-width: 770px; font-size: clamp(2.6rem, 7vw, 5.6rem); line-height: .98; letter-spacing: -.06em; font-weight: 790; }
     .hero-copy { max-width: 720px; margin: 27px 0 0; color: #c8d8d8; font-size: 18px; line-height: 1.7; }
-    .metrics {
-      width: min(1180px, calc(100% - 40px));
-      margin: -27px auto 74px;
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      position: relative; z-index: 4;
-      background: var(--white); border: 1px solid var(--line); border-radius: 20px;
-      box-shadow: var(--shadow); overflow: hidden;
-    }
-    .metric { padding: 25px 27px; border-right: 1px solid var(--line); }
-    .metric:last-child { border-right: 0; }
-    .metric strong { display: block; font-size: 30px; line-height: 1.1; letter-spacing: -.04em; }
-    .metric span { display: block; margin-top: 7px; color: var(--muted); font-size: 14px; }
     main { width: min(1180px, calc(100% - 40px)); margin: 0 auto 100px; }
     section { scroll-margin-top: 92px; margin-top: 82px; }
     .section-head { display: grid; grid-template-columns: 170px minmax(0, 700px); gap: 35px; margin-bottom: 34px; align-items: start; }
@@ -113,6 +101,19 @@
     .timeline p + p, .timeline p + ul { margin-top: 8px; }
     .timeline ul { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
     .inline-stat { color: var(--teal-dark); font-weight: 750; }
+    .data-panel { padding: 31px; border-radius: 22px; background: var(--white); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .data-topline { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 21px; }
+    .data-topline strong { display: block; font-size: 42px; line-height: 1; letter-spacing: -.05em; }
+    .data-topline span { color: var(--muted); font-size: 14px; }
+    .automation-bar { display: flex; width: 100%; min-height: 68px; overflow: hidden; border-radius: 14px; background: #e8efed; }
+    .bar-segment { display: flex; align-items: center; justify-content: center; padding: 12px; color: white; font-size: 14px; font-weight: 820; text-align: center; line-height: 1.25; }
+    .bar-approved { flex: 78.72; background: var(--teal); }
+    .bar-rejected { flex: 3.86; min-width: 54px; background: var(--teal-dark); }
+    .bar-manual { flex: 17.42; background: var(--amber); }
+    .data-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .data-item { padding: 16px 18px; border-radius: 13px; background: var(--paper); border: 1px solid var(--line); }
+    .data-item b { display: block; font-size: 23px; line-height: 1.1; }
+    .data-item span { color: var(--muted); font-size: 14px; }
     .flow-summary {
       display: grid; grid-template-columns: minmax(0, 1fr) 245px; gap: 18px;
       padding: 25px; border-radius: 22px; background: var(--white); border: 1px solid var(--line);
@@ -172,9 +173,7 @@
     .footer-inner strong { color: white; }
     @media (max-width: 860px) {
       nav { display: none; }
-      .metrics { grid-template-columns: 1fr 1fr; }
-      .metric:nth-child(2) { border-right: 0; }
-      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .data-legend { grid-template-columns: 1fr; }
       .compare, .audit-grid { grid-template-columns: 1fr; }
       .flow-summary { grid-template-columns: 1fr; }
       .review-total { position: static; }
@@ -184,11 +183,12 @@
       .section-intro { grid-column: 1; margin-top: 6px; }
     }
     @media (max-width: 560px) {
-      .topbar-inner, .hero-inner, .metrics, main, .footer-inner { width: min(100% - 28px, 1180px); }
+      .topbar-inner, .hero-inner, main, .footer-inner { width: min(100% - 28px, 1180px); }
       .hero-inner { padding: 56px 0 58px; }
-      .metrics { grid-template-columns: 1fr; margin-bottom: 58px; }
-      .metric, .metric:nth-child(2) { border-right: 0; border-bottom: 1px solid var(--line); }
-      .metric:last-child { border-bottom: 0; }
+      .data-panel { padding: 20px; }
+      .data-topline { align-items: start; flex-direction: column; }
+      .automation-bar { min-height: 110px; }
+      .bar-segment { padding: 8px 4px; font-size: 12px; writing-mode: vertical-rl; transform: rotate(180deg); }
       section { margin-top: 62px; }
       .timeline > li { grid-template-columns: 42px 1fr; gap: 13px; padding: 17px; }
       .timeline > li::before { width: 36px; height: 36px; }
@@ -217,8 +217,9 @@
     <div class="topbar-inner">
       <div class="brand"><span class="brand-mark">MW</span> MIWI Flow</div>
       <nav aria-label="Page sections">
-        <a href="#overview">Flow overview</a>
         <a href="#current">Current flow</a>
+        <a href="#data">August data</a>
+        <a href="#overview">Flow overview</a>
         <a href="#tis">TIS model</a>
         <a href="#checks">Fraud checks</a>
         <a href="#decision">Decision flow</a>
@@ -235,17 +236,49 @@
     </div>
   </div>
 
-  <div class="metrics" aria-label="August automation results">
-    <div class="metric"><strong>82.58%</strong><span>Requests automated</span></div>
-    <div class="metric"><strong>78.72%</strong><span>Automatically approved</span></div>
-    <div class="metric"><strong>3.86%</strong><span>Automatically rejected</span></div>
-    <div class="metric"><strong>17.42%</strong><span>Required manual review</span></div>
-  </div>
-
   <main>
+    <section id="current">
+      <div class="section-head">
+        <div class="kicker">01 · Current state</div>
+        <h2>Current flow</h2>
+        <p class="section-intro">The existing journey automates most MIWI requests, with defined cutovers for fraud, policy checks, and system errors.</p>
+      </div>
+      <ol class="timeline">
+        <li><div><p>The customer reports a missing or wrong item.</p></div></li>
+        <li><div><p>The system checks the <strong>24-hour reporting window</strong>. Requests reported after 24 hours are rejected with the reporting-window reason.</p></div></li>
+        <li><div><p>The system checks whether the customer qualifies as a <strong>high-value user</strong>. Eligible customers bypass standard fraud checks and move directly to image validation.</p></div></li>
+        <li><div><p>For all other customers, the system retrieves the TIS fraud assessment.</p><ul><li>Customers not flagged for fraud proceed to image validation.</li><li>Fraud-flagged customers are sent to an agent for manual review.</li></ul><p><span class="inline-stat">TIS flags about 8.07% of all tickets</span> for manual review. Agents receive only the fraud outcome, without the signals behind it. They then repeat checks such as Watchtower signals, refund behaviour and frequency, and multiple-account indicators.</p></div></li>
+        <li><div><p>Image validation checks whether the submitted image is authentic and relevant to the claim. Invalid images are rejected, but customers may reopen the case with a valid image.</p></div></li>
+        <li><div><p>For valid requests, the system determines the eligible refund amount. System errors at this step affect approximately <strong>2.15% of all cases</strong> and require manual agent follow-up.</p></div></li>
+        <li><div><p>The system applies final checks before completing the refund:</p><ul><li><strong>Merchant eligibility:</strong> 2.7% of all cases are sent for manual check. This includes SG: MCD, PH: Uncle John, and VN: FP Pharmacy.</li><li><strong>Country refund threshold:</strong> 2% of all cases are sent for manual check.</li><li><strong>Thailand 60/40 discount orders:</strong> excluded from automation, with 2.5% of all cases sent for manual check.</li></ul></div></li>
+        <li><div><p>After the applicable checks pass, the system pays the refund to the original payment method, GPC, or, where needed, vouchers.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="data">
+      <div class="section-head">
+        <div class="kicker">02 · August data</div>
+        <h2>Automation performance</h2>
+        <p class="section-intro">In August, 82.58% of MIWI requests were automated and 17.42% required manual review.</p>
+      </div>
+      <div class="data-panel">
+        <div class="data-topline"><div><strong>82.58%</strong><span>of requests completed through automation</span></div><span>100% of MIWI requests</span></div>
+        <div class="automation-bar" role="img" aria-label="78.72 percent automatically approved, 3.86 percent automatically rejected, and 17.42 percent manually reviewed">
+          <div class="bar-segment bar-approved">78.72% approved</div>
+          <div class="bar-segment bar-rejected" aria-label="3.86 percent rejected">3.86%</div>
+          <div class="bar-segment bar-manual">17.42% manual</div>
+        </div>
+        <div class="data-legend">
+          <div class="data-item"><b>78.72%</b><span>Automatically approved</span></div>
+          <div class="data-item"><b>3.86%</b><span>Automatically rejected</span></div>
+          <div class="data-item"><b>17.42%</b><span>Required manual review</span></div>
+        </div>
+      </div>
+    </section>
+
     <section id="overview">
       <div class="section-head">
-        <div class="kicker">01 · At a glance</div>
+        <div class="kicker">03 · At a glance</div>
         <h2>High-level check flow</h2>
         <p class="section-intro">Each percentage shows the share of all MIWI cases sent to agent review at that step.</p>
       </div>
@@ -276,27 +309,9 @@
       </div>
     </section>
 
-    <section id="current">
-      <div class="section-head">
-        <div class="kicker">02 · Current state</div>
-        <h2>Current flow</h2>
-        <p class="section-intro">The existing journey automates most MIWI requests, with defined cutovers for fraud, policy checks, and system errors.</p>
-      </div>
-      <ol class="timeline">
-        <li><div><p>The customer reports a missing or wrong item.</p></div></li>
-        <li><div><p>The system checks the <strong>24-hour reporting window</strong>. Requests reported after 24 hours are rejected with the reporting-window reason.</p></div></li>
-        <li><div><p>The system checks whether the customer qualifies as a <strong>high-value user</strong>. Eligible customers bypass standard fraud checks and move directly to image validation.</p></div></li>
-        <li><div><p>For all other customers, the system retrieves the TIS fraud assessment.</p><ul><li>Customers not flagged for fraud proceed to image validation.</li><li>Fraud-flagged customers are sent to an agent for manual review.</li></ul><p><span class="inline-stat">TIS flags about 8.07% of all tickets</span> for manual review. Agents receive only the fraud outcome, without the signals behind it. They then repeat checks such as Watchtower signals, refund behaviour and frequency, and multiple-account indicators.</p></div></li>
-        <li><div><p>Image validation checks whether the submitted image is authentic and relevant to the claim. Invalid images are rejected, but customers may reopen the case with a valid image.</p></div></li>
-        <li><div><p>For valid requests, the system determines the eligible refund amount. System errors at this step affect approximately <strong>2.15% of all cases</strong> and require manual agent follow-up.</p></div></li>
-        <li><div><p>The system applies final checks before completing the refund:</p><ul><li><strong>Merchant eligibility:</strong> 2.7% of all cases are sent for manual check. This includes SG: MCD, PH: Uncle John, and VN: FP Pharmacy.</li><li><strong>Country refund threshold:</strong> 2% of all cases are sent for manual check.</li><li><strong>Thailand 60/40 discount orders:</strong> excluded from automation, with 2.5% of all cases sent for manual check.</li></ul></div></li>
-        <li><div><p>After the applicable checks pass, the system pays the refund to the original payment method, GPC, or, where needed, vouchers.</p></div></li>
-      </ol>
-    </section>
-
     <section id="tis">
       <div class="section-head">
-        <div class="kicker">03 · TIS evolution</div>
+        <div class="kicker">04 · TIS evolution</div>
         <h2>From a broad flag to an explainable decision</h2>
       </div>
       <div class="compare">
@@ -320,7 +335,7 @@
 
     <section id="checks">
       <div class="section-head">
-        <div class="kicker">04 · Triggered checks</div>
+        <div class="kicker">05 · Triggered checks</div>
         <h2>Checks for customers flagged by the model</h2>
         <p class="section-intro">Each check runs within TIS only after the model score exceeds the fraud threshold.</p>
       </div>
@@ -335,7 +350,7 @@
 
     <section id="decision">
       <div class="section-head">
-        <div class="kicker">05 · Proposed state</div>
+        <div class="kicker">06 · Proposed state</div>
         <h2>Proposed decision flow</h2>
       </div>
       <div class="decision-path">
@@ -351,7 +366,7 @@
 
     <section id="audit">
       <div class="section-head">
-        <div class="kicker">06 · Explainability</div>
+        <div class="kicker">07 · Explainability</div>
         <h2>Audit trail and reopened cases</h2>
       </div>
       <div class="audit-grid">
