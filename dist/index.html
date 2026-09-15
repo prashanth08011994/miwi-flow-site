@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MIWI end-to-end automation journey and proposed fraud review improvements.">
+  <title>MIWI End-to-End Flow</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230f2f33'/%3E%3Cpath d='M15 44V20h7l10 13 10-13h7v24h-7V31L32 44 22 31v13z' fill='%2359e1c1'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --ink: #102b2f;
+      --muted: #5d7073;
+      --paper: #f5f8f7;
+      --white: #ffffff;
+      --line: #dce7e4;
+      --teal: #087f6d;
+      --teal-dark: #0d4d48;
+      --mint: #d9f5ed;
+      --mint-strong: #5bd8b7;
+      --amber: #c97912;
+      --amber-bg: #fff1d7;
+      --red: #b73e44;
+      --red-bg: #fee9e9;
+      --navy: #142f3a;
+      --shadow: 0 16px 50px rgba(16, 43, 47, .09);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    a { color: inherit; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(245, 248, 247, .94);
+      border-bottom: 1px solid rgba(220, 231, 228, .9);
+      backdrop-filter: blur(14px);
+    }
+    .topbar-inner {
+      width: min(1180px, calc(100% - 40px));
+      min-height: 64px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 780; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--ink); color: var(--mint-strong);
+      font-size: 13px; letter-spacing: .04em;
+    }
+    nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    nav a { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 650; padding: 8px 11px; border-radius: 9px; white-space: nowrap; }
+    nav a:hover, nav a:focus-visible { background: var(--white); color: var(--teal-dark); outline: none; }
+    .hero {
+      background: var(--navy);
+      color: white;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 560px; height: 560px; border-radius: 50%;
+      right: -170px; top: -320px;
+      border: 95px solid rgba(91, 216, 183, .11);
+    }
+    .hero-inner { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 74px 0 66px; position: relative; z-index: 1; }
+    .eyebrow { margin: 0 0 15px; color: var(--mint-strong); font-size: 13px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 0; max-width: 770px; font-size: clamp(2.6rem, 7vw, 5.6rem); line-height: .98; letter-spacing: -.06em; font-weight: 790; }
+    .hero-copy { max-width: 720px; margin: 27px 0 0; color: #c8d8d8; font-size: 18px; line-height: 1.7; }
+    .metrics {
+      width: min(1180px, calc(100% - 40px));
+      margin: -27px auto 74px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      position: relative; z-index: 4;
+      background: var(--white); border: 1px solid var(--line); border-radius: 20px;
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .metric { padding: 25px 27px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric strong { display: block; font-size: 30px; line-height: 1.1; letter-spacing: -.04em; }
+    .metric span { display: block; margin-top: 7px; color: var(--muted); font-size: 14px; }
+    main { width: min(1180px, calc(100% - 40px)); margin: 0 auto 100px; }
+    section { scroll-margin-top: 92px; margin-top: 82px; }
+    .section-head { display: grid; grid-template-columns: 170px minmax(0, 700px); gap: 35px; margin-bottom: 34px; align-items: start; }
+    .kicker { color: var(--teal); font-size: 13px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; padding-top: 7px; }
+    h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.06; letter-spacing: -.045em; }
+    .section-intro { grid-column: 2; margin: -16px 0 0; color: var(--muted); font-size: 17px; }
+    h3 { margin: 0; font-size: 21px; line-height: 1.3; letter-spacing: -.02em; }
+    p { margin: 0; }
+    .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: flow; }
+    .timeline > li {
+      counter-increment: flow;
+      display: grid; grid-template-columns: 52px 1fr; gap: 20px;
+      padding: 21px 24px; background: var(--white); border: 1px solid var(--line); border-radius: 15px;
+    }
+    .timeline > li::before {
+      content: counter(flow, decimal-leading-zero);
+      width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+      background: var(--mint); color: var(--teal-dark); font-size: 13px; font-weight: 850;
+    }
+    .timeline p + p, .timeline p + ul { margin-top: 8px; }
+    .timeline ul { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+    .inline-stat { color: var(--teal-dark); font-weight: 750; }
+    .flow-summary {
+      display: grid; grid-template-columns: minmax(0, 1fr) 245px; gap: 18px;
+      padding: 25px; border-radius: 22px; background: var(--white); border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .flow-track { display: grid; gap: 28px; }
+    .flow-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) 178px; gap: 15px; align-items: center; position: relative; }
+    .flow-row:not(:last-child)::after { content: "↓"; position: absolute; left: 26px; bottom: -29px; color: var(--teal); font-size: 21px; font-weight: 800; }
+    .flow-step { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; background: var(--mint); color: var(--teal-dark); font-size: 13px; font-weight: 850; }
+    .flow-copy { min-height: 72px; display: flex; flex-direction: column; justify-content: center; padding: 14px 17px; border: 1px solid var(--line); border-radius: 13px; }
+    .flow-copy strong { line-height: 1.25; }
+    .flow-copy span { margin-top: 4px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .review-pill { padding: 11px 12px; border-radius: 11px; background: var(--red-bg); color: var(--red); text-align: center; font-size: 13px; font-weight: 820; line-height: 1.3; }
+    .review-pill.policy { color: #83500d; background: var(--amber-bg); }
+    .review-pill.auto { color: var(--teal-dark); background: var(--mint); }
+    .review-total { border-radius: 17px; padding: 23px; background: var(--navy); color: white; align-self: start; position: sticky; top: 88px; }
+    .review-total small { display: block; color: var(--mint-strong); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .review-total strong { display: block; margin-top: 9px; font-size: 42px; line-height: 1; letter-spacing: -.05em; }
+    .review-total p { margin-top: 12px; color: #c8d8d8; font-size: 14px; }
+    .review-breakdown { list-style: none; padding: 16px 0 0; margin: 17px 0 0; border-top: 1px solid rgba(255,255,255,.15); }
+    .review-breakdown li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: #c8d8d8; }
+    .review-breakdown li + li { margin-top: 8px; }
+    .review-breakdown b { color: white; }
+    .compare { display: grid; grid-template-columns: 1fr 1.15fr; gap: 18px; align-items: stretch; }
+    .panel { border-radius: 20px; padding: 31px; border: 1px solid var(--line); background: var(--white); }
+    .panel.asis { background: #fffaf0; border-color: #efd9b3; }
+    .panel.tobe { background: var(--navy); color: white; border-color: var(--navy); }
+    .panel-label { display: inline-flex; padding: 6px 10px; border-radius: 999px; margin-bottom: 20px; font-size: 12px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .asis .panel-label { color: #8e560e; background: var(--amber-bg); }
+    .tobe .panel-label { color: var(--mint-strong); background: rgba(91, 216, 183, .12); }
+    .panel h3 { font-size: 26px; margin-bottom: 14px; }
+    .panel p { color: var(--muted); }
+    .tobe p, .tobe li { color: #ccdddd; }
+    .panel ul { margin: 18px 0 0; padding-left: 20px; }
+    .panel li + li { margin-top: 10px; }
+    .callout { margin-top: 18px; border-radius: 15px; padding: 18px 20px; background: var(--amber-bg); color: #76470b; font-weight: 620; }
+    .checks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
+    .check { grid-column: span 2; background: var(--white); border: 1px solid var(--line); border-radius: 17px; padding: 24px; }
+    .check:nth-child(4), .check:nth-child(5) { grid-column: span 3; }
+    .check-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--mint); color: var(--teal-dark); font-weight: 850; margin-bottom: 17px; }
+    .check p { color: var(--muted); margin-top: 8px; }
+    .threshold { display: inline-block; margin-top: 14px; color: var(--red); background: var(--red-bg); border-radius: 8px; padding: 6px 9px; font-size: 13px; font-weight: 800; }
+    .idea { margin-top: 18px; padding: 19px 22px; border-left: 4px solid var(--amber); background: var(--amber-bg); border-radius: 4px 14px 14px 4px; color: #6f470f; }
+    .decision-path { display: grid; gap: 0; max-width: 880px; }
+    .decision-step { display: grid; grid-template-columns: 56px 1fr; gap: 18px; position: relative; padding-bottom: 25px; }
+    .decision-step:not(:last-child)::after { content: ""; position: absolute; left: 27px; top: 51px; bottom: 4px; width: 2px; background: var(--line); }
+    .decision-num { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--mint-strong); background: var(--white); color: var(--teal-dark); font-weight: 850; }
+    .decision-copy { padding: 15px 20px; border-radius: 13px; background: var(--white); border: 1px solid var(--line); }
+    .decision-copy strong { color: var(--teal-dark); }
+    .audit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .audit-card { background: var(--white); border: 1px solid var(--line); border-radius: 18px; padding: 27px; }
+    .audit-card h3 { margin-bottom: 13px; }
+    .audit-card ul { margin: 0; padding-left: 20px; color: var(--muted); }
+    .audit-card li + li { margin-top: 9px; }
+    footer { background: var(--navy); color: #a9c0c0; }
+    .footer-inner { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0; display: flex; justify-content: space-between; gap: 24px; font-size: 14px; }
+    .footer-inner strong { color: white; }
+    @media (max-width: 860px) {
+      nav { display: none; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .compare, .audit-grid { grid-template-columns: 1fr; }
+      .flow-summary { grid-template-columns: 1fr; }
+      .review-total { position: static; }
+      .checks { grid-template-columns: 1fr; }
+      .check, .check:nth-child(4), .check:nth-child(5) { grid-column: auto; }
+      .section-head { grid-template-columns: 1fr; gap: 7px; }
+      .section-intro { grid-column: 1; margin-top: 6px; }
+    }
+    @media (max-width: 560px) {
+      .topbar-inner, .hero-inner, .metrics, main, .footer-inner { width: min(100% - 28px, 1180px); }
+      .hero-inner { padding: 56px 0 58px; }
+      .metrics { grid-template-columns: 1fr; margin-bottom: 58px; }
+      .metric, .metric:nth-child(2) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:last-child { border-bottom: 0; }
+      section { margin-top: 62px; }
+      .timeline > li { grid-template-columns: 42px 1fr; gap: 13px; padding: 17px; }
+      .timeline > li::before { width: 36px; height: 36px; }
+      .panel { padding: 23px; }
+      .flow-summary { padding: 16px; }
+      .flow-row { grid-template-columns: 45px minmax(0, 1fr); gap: 10px; }
+      .flow-step { width: 40px; height: 40px; border-radius: 12px; }
+      .flow-row:not(:last-child)::after { left: 18px; }
+      .review-pill { grid-column: 2; text-align: left; margin-top: -4px; }
+      .decision-step { grid-template-columns: 44px 1fr; gap: 12px; }
+      .decision-num { width: 44px; height: 44px; }
+      .decision-step:not(:last-child)::after { left: 21px; top: 43px; }
+      .decision-copy { padding: 12px 15px; }
+      .footer-inner { flex-direction: column; }
+    }
+    @media print {
+      .topbar { display: none; }
+      .hero { print-color-adjust: exact; }
+      section { break-inside: avoid; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-mark">MW</span> MIWI Flow</div>
+      <nav aria-label="Page sections">
+        <a href="#overview">Flow overview</a>
+        <a href="#current">Current flow</a>
+        <a href="#tis">TIS model</a>
+        <a href="#checks">Fraud checks</a>
+        <a href="#decision">Decision flow</a>
+        <a href="#audit">Audit trail</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Integrity · MIWI automation</p>
+      <h1>MIWI end-to-end flow</h1>
+      <p class="hero-copy">The current automation journey and the proposed handling for requests flagged for fraud review, designed to reduce agent handling while keeping decisions consistent, explainable, and reviewable.</p>
+    </div>
+  </div>
+
+  <div class="metrics" aria-label="August automation results">
+    <div class="metric"><strong>82.58%</strong><span>Requests automated</span></div>
+    <div class="metric"><strong>78.72%</strong><span>Automatically approved</span></div>
+    <div class="metric"><strong>3.86%</strong><span>Automatically rejected</span></div>
+    <div class="metric"><strong>17.42%</strong><span>Required manual review</span></div>
+  </div>
+
+  <main>
+    <section id="overview">
+      <div class="section-head">
+        <div class="kicker">01 · At a glance</div>
+        <h2>High-level check flow</h2>
+        <p class="section-intro">Each percentage shows the share of all MIWI cases sent to agent review at that step.</p>
+      </div>
+      <div class="flow-summary">
+        <div class="flow-track" aria-label="MIWI checks and manual review rates">
+          <div class="flow-row"><div class="flow-step">01</div><div class="flow-copy"><strong>Reporting window</strong><span>Reject requests reported after 24 hours.</span></div><div class="review-pill auto">Automated check</div></div>
+          <div class="flow-row"><div class="flow-step">02</div><div class="flow-copy"><strong>High-value user check</strong><span>Eligible customers bypass standard fraud checks.</span></div><div class="review-pill auto">Bypass to image validation</div></div>
+          <div class="flow-row"><div class="flow-step">03</div><div class="flow-copy"><strong>TIS fraud assessment</strong><span>Customers flagged for fraud are routed for review.</span></div><div class="review-pill">Agent review · 8.07%</div></div>
+          <div class="flow-row"><div class="flow-step">04</div><div class="flow-copy"><strong>Image validation</strong><span>Check whether the image is authentic and relevant.</span></div><div class="review-pill auto">Automated validation</div></div>
+          <div class="flow-row"><div class="flow-step">05</div><div class="flow-copy"><strong>Determine refund amount</strong><span>Calculate the eligible refund. Route system errors at this step for agent follow-up.</span></div><div class="review-pill">Agent follow-up · 2.15%</div></div>
+          <div class="flow-row"><div class="flow-step">06</div><div class="flow-copy"><strong>Merchant eligibility</strong><span>SG: MCD · PH: Uncle John · VN: FP Pharmacy</span></div><div class="review-pill policy">Agent review · 2.70%</div></div>
+          <div class="flow-row"><div class="flow-step">07</div><div class="flow-copy"><strong>Country refund threshold</strong><span>Apply the market-level refund policy control.</span></div><div class="review-pill policy">Agent review · 2.00%</div></div>
+          <div class="flow-row"><div class="flow-step">08</div><div class="flow-copy"><strong>Thailand 60/40 discount order</strong><span>These orders are excluded from automation.</span></div><div class="review-pill policy">Agent review · 2.50%</div></div>
+          <div class="flow-row"><div class="flow-step">09</div><div class="flow-copy"><strong>Complete refund</strong><span>Pay through the original method, GPC, or vouchers.</span></div><div class="review-pill auto">Automated payment</div></div>
+        </div>
+        <aside class="review-total">
+          <small>Total manual review</small>
+          <strong>17.42%</strong>
+          <p>The displayed review paths are treated as mutually exclusive categories.</p>
+          <ul class="review-breakdown">
+            <li><span>TIS fraud</span><b>8.07%</b></li>
+            <li><span>Merchant</span><b>2.70%</b></li>
+            <li><span>Country threshold</span><b>2.00%</b></li>
+            <li><span>TH 60/40</span><b>2.50%</b></li>
+            <li><span>System errors</span><b>2.15%</b></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="current">
+      <div class="section-head">
+        <div class="kicker">02 · Current state</div>
+        <h2>Current flow</h2>
+        <p class="section-intro">The existing journey automates most MIWI requests, with defined cutovers for fraud, policy checks, and system errors.</p>
+      </div>
+      <ol class="timeline">
+        <li><div><p>The customer reports a missing or wrong item.</p></div></li>
+        <li><div><p>The system checks the <strong>24-hour reporting window</strong>. Requests reported after 24 hours are rejected with the reporting-window reason.</p></div></li>
+        <li><div><p>The system checks whether the customer qualifies as a <strong>high-value user</strong>. Eligible customers bypass standard fraud checks and move directly to image validation.</p></div></li>
+        <li><div><p>For all other customers, the system retrieves the TIS fraud assessment.</p><ul><li>Customers not flagged for fraud proceed to image validation.</li><li>Fraud-flagged customers are sent to an agent for manual review.</li></ul><p><span class="inline-stat">TIS flags about 8.07% of all tickets</span> for manual review. Agents receive only the fraud outcome, without the signals behind it. They then repeat checks such as Watchtower signals, refund behaviour and frequency, and multiple-account indicators.</p></div></li>
+        <li><div><p>Image validation checks whether the submitted image is authentic and relevant to the claim. Invalid images are rejected, but customers may reopen the case with a valid image.</p></div></li>
+        <li><div><p>For valid requests, the system determines the eligible refund amount. System errors at this step affect approximately <strong>2.15% of all cases</strong> and require manual agent follow-up.</p></div></li>
+        <li><div><p>The system applies final checks before completing the refund:</p><ul><li><strong>Merchant eligibility:</strong> 2.7% of all cases are sent for manual check. This includes SG: MCD, PH: Uncle John, and VN: FP Pharmacy.</li><li><strong>Country refund threshold:</strong> 2% of all cases are sent for manual check.</li><li><strong>Thailand 60/40 discount orders:</strong> excluded from automation, with 2.5% of all cases sent for manual check.</li></ul></div></li>
+        <li><div><p>After the applicable checks pass, the system pays the refund to the original payment method, GPC, or, where needed, vouchers.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="tis">
+      <div class="section-head">
+        <div class="kicker">03 · TIS evolution</div>
+        <h2>From a broad flag to an explainable decision</h2>
+      </div>
+      <div class="compare">
+        <article class="panel asis">
+          <span class="panel-label">As-is</span>
+          <h3>TIS fraud model</h3>
+          <p>TIS currently flags a case when any of the following conditions is met:</p>
+          <ul><li>The machine-learning fraud score exceeds the defined threshold.</li><li>The requested refund amount exceeds the refund threshold.</li><li>The customer exceeds the allowed number of refunds per day.</li></ul>
+          <div class="callout">The model score is not currently explanatory. It indicates potential risk but does not show the specific behaviours or signals behind the result.</div>
+          <p style="margin-top:16px">Country refund thresholds are also applied in both TIS and Tolong (GSTF), creating overlapping controls.</p>
+        </article>
+        <article class="panel tobe">
+          <span class="panel-label">To-be</span>
+          <h3>Proposed TIS checks</h3>
+          <p>As a short-term solution, use the machine-learning fraud score to trigger additional fraud checks within TIS.</p>
+          <ul><li>If the score does not exceed the threshold, continue with the standard MIWI flow.</li><li>If the score exceeds the threshold, replace initial agent routing with deterministic fraud checks.</li><li>Record each check, its inputs, and its outcome on the ticket.</li><li>Reject the case when one or more checks fail.</li><li>If no checks fail, continue to image validation.</li><li>Keep country refund thresholds in Tolong as separate cost and refund-policy controls.</li></ul>
+          <p style="margin-top:18px">This uses the model score as the initial fraud-risk signal and adds explainable checks on top.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="checks">
+      <div class="section-head">
+        <div class="kicker">04 · Triggered checks</div>
+        <h2>Checks for customers flagged by the model</h2>
+        <p class="section-intro">Each check runs within TIS only after the model score exceeds the fraud threshold.</p>
+      </div>
+      <div class="checks">
+        <article class="check"><div class="check-icon">90d</div><h3>Refund-value ratio</h3><p>Review the last 90 days. Compare total RA value with total completed-order value.</p><span class="threshold">Reject when ratio &gt; 15%</span></article>
+        <article class="check"><div class="check-icon">90d</div><h3>Refund-count ratio</h3><p>Review the last 90 days. Compare total RA count with total completed orders.</p><span class="threshold">Reject when ratio ≥ 25%</span></article>
+        <article class="check"><div class="check-icon">03</div><h3>Consecutive refunds</h3><p>Review the last 90 days and identify repeated refund behaviour.</p><span class="threshold">Reject the 3rd consecutive request</span></article>
+        <article class="check"><div class="check-icon">LA</div><h3>Linked accounts</h3><p>Use the current detection result.</p><span class="threshold">Reject when multiple accounts are detected and at least one is fraud-flagged</span></article>
+        <article class="check"><div class="check-icon">PX</div><h3>PAX-DAX-MEX collusion</h3><p>Use the current detection result.</p><span class="threshold">Reject when collusion is detected</span></article>
+      </div>
+    </section>
+
+    <section id="decision">
+      <div class="section-head">
+        <div class="kicker">05 · Proposed state</div>
+        <h2>Proposed decision flow</h2>
+      </div>
+      <div class="decision-path">
+        <div class="decision-step"><div class="decision-num">1</div><div class="decision-copy">Check for the <strong>high-value bypass</strong>. If eligible, continue to image validation.</div></div>
+        <div class="decision-step"><div class="decision-num">2</div><div class="decision-copy">Retrieve the <strong>TIS fraud outcome</strong> for all other customers.</div></div>
+        <div class="decision-step"><div class="decision-num">3</div><div class="decision-copy">If not fraud-flagged, continue to image validation.</div></div>
+        <div class="decision-step"><div class="decision-num">4</div><div class="decision-copy">If fraud-flagged, run <strong>every deterministic risk check</strong> and store the evidence.</div></div>
+        <div class="decision-step"><div class="decision-num">5</div><div class="decision-copy"><strong>Reject if any rule fails.</strong> The ticket must show every applicable rejection reason.</div></div>
+        <div class="decision-step"><div class="decision-num">6</div><div class="decision-copy">If no rule fails, continue to image validation, subject to the final policy for fraud-flagged customers.</div></div>
+        <div class="decision-step"><div class="decision-num">7</div><div class="decision-copy">For a valid image, calculate the refund, apply merchant, item, country, and system controls, then pay through the original method, GPC, or vouchers.</div></div>
+      </div>
+    </section>
+
+    <section id="audit">
+      <div class="section-head">
+        <div class="kicker">06 · Explainability</div>
+        <h2>Audit trail and reopened cases</h2>
+      </div>
+      <div class="audit-grid">
+        <article class="audit-card">
+          <h3>Agent-ready audit trail</h3>
+          <ul><li>TIS fraud status. For every risk rule, show input values, threshold, lookback window, and pass or fail result.</li><li>High-value bypass status.</li><li>Image authenticity and relevance result, including the reason for an invalid image.</li><li>Refund calculation, payment method, and final-control outcomes.</li></ul>
+        </article>
+        <article class="audit-card">
+          <h3>Handling reopened cases</h3>
+          <p style="color:var(--muted); margin-bottom:12px">Agents should not repeat checks the automation has already completed. The SOP should distinguish between rejection types:</p>
+          <ul><li><strong>PAX-DAX-MEX collusion or linked fraud account:</strong> do not reconsider the refund; keep the rejection in place.</li><li><strong>Refund ratios or consecutive refunds:</strong> review the claim and supporting evidence closely, then reject when proof is insufficient and accept if proof is satisfactory.</li></ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><strong>MIWI end-to-end flow</strong><span>Current journey · Proposed TIS automation · Decision controls</span></div></footer>
+</body>
+</html>
